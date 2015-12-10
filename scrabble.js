@@ -3,6 +3,9 @@ $( document ).ready(function() {
     var cellCount = 1;
     var tileCount = 1;
     var curScore = 0;
+    var prevTile = 0;
+    //var for enforcing players to play their tiles in either a row or column, not both
+    var currentlyPlaced = 0;
     //arrays containing special tile numbers
     var tripleWord = [1,8,15,106,120,211,218,225];
     var doubleWord = [17,29,33,43,49,57,65,71,155,161,169,177,183,193,197,209];
@@ -173,6 +176,8 @@ $( document ).ready(function() {
                 left: cntrLeft + "px",
                 top: cntrTop + "px"
             });
+            $("#"+prevTile).droppable('option', 'accept', '.draggable');
+            console.log(prevTile);
             var id = ui.draggable.attr("id").substr(4,1);
             console.log(id);
             curScore -= calcScore(id);
@@ -195,6 +200,9 @@ $( document ).ready(function() {
                 left: cntrLeft + "px",
                 top: cntrTop + "px"
             });
+            $("#"+prevTile).droppable('option', 'accept', '.draggable');
+            currentlyPlaced++;
+            //prevents other tiles from being placed on a slot once occupied
             $(this).droppable('option', 'accept', ui.draggable);
             //Score Calculations
             var id = ui.draggable.attr("id").substr(4,1);
@@ -205,7 +213,7 @@ $( document ).ready(function() {
             $("#score").html(curScore);
         },
             out: function(event, ui){
-        $(this).droppable('option', 'accept', '.draggable');
+                prevTile = $(this).attr("id");
         }   });
     }
 });
