@@ -22,13 +22,22 @@ Description: Scrabble using Jquery drag and drop libraries
    
      <body>
          <h1>Scrabble Test</h1>
-         <div id="rack">
+          <h2 id='score'>Score:</h2>
+         <div id="boardContainer"></div>
+         <div id="legendcontainer">
+             <div id="rack">
              <fieldset>
                  <legend>Rack:</legend>
-                 <div id='tile1'><img src='graphics/Scrabble_Tile_A.jpg' alt="test" height ='60' width = '60'></div>
-                 <div id='tile2'><img src='graphics/Scrabble_Tile_B.jpg' alt="test" height ='60' width = '60'></div>
+                 <div id='playerTile1'></div>
+                 <div id='playerTile2'></div>
+                 <div id='playerTile3'></div>
+                 <div id='playerTile4'></div>
+                 <div id='playerTile5'></div>
+                 <div id='playerTile6'></div>
+                 <div id='playerTile7'></div>
              </fieldset>
          </div>
-         <div id="boardContainer"></div>
+         <button name='dealTile' >Deal Tiles</button> 
+         </div>
      </body>
    </html>
