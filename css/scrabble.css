@@ -1,0 +1,27 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:300);
+body {
+    background-color: #1ABC9C;
+    text-align: center;
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+}
+#boardContainer{
+    text-align:center;
+}
+table {
+    color: #1a1a1a;
+    border-spacing:0;
+    margin-left:auto; 
+    margin-right:auto;
+  }
+img{
+    display: block;
+    margin-left:auto; 
+    margin-right:auto;
+  }
+#rack{
+    float:right;
+  }
+  #tile1,#tile2{
+      display:inline-block;
+  }
