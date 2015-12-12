@@ -15,12 +15,13 @@ table {
     margin-right:auto;
   }
 img{
+    z-index:1;
     position:absolute;
   display:block;
   vertical-align: bottom;
   }
   .draggable{
-
+      z-index:2;
   }
   .test{
       position:relative;
@@ -44,5 +45,6 @@ img{
       margin-left:auto; 
     margin-right:auto;
   }
-
- 
+  #errormsg{
+      color:red;
+  }
