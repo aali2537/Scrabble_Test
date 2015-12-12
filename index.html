@@ -8,8 +8,9 @@ File: /~ali/public_html/assignment5.html
 Name: Alexander Li
 Email: Alexander_li1@student.uml.edu
 Affiliation: Umass Lowell Computer Science Undergraduate, in class 91.461 GUI Programming I
-Date Created: 12/9/2015
-Description: Scrabble using Jquery drag and drop libraries
+Date Created: 10/20/2015
+Description: Scrabble using Jquery drag and drop libraries. Currently works with one word, forcing user to adhere to scrabble rules for tile placement(can only play tiles along a row or a column not
+not both.
 -->   
    <title>Assignment 9</title>
    <link rel="stylesheet" type="text/css" href="css/scrabble.css">
@@ -38,6 +39,8 @@ Description: Scrabble using Jquery drag and drop libraries
              </fieldset>
          </div>
          <button name='dealTile' >Deal Tiles</button> 
+         <button name="submitWord">Check Word</button>
+         <div id='errormsg'></div>
          </div>
      </body>
    </html>

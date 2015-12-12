@@ -1,11 +1,15 @@
 $( document ).ready(function() {
-    //global board count and tile count
+    //global vars including board count and tile count
     var cellCount = 1;
     var tileCount = 1;
     var curScore = 0;
     var prevTile = 0;
+    //array used for making validating tiles easier
+    var validate = [];
+    var revalidate = [];
     //var for enforcing players to play their tiles in either a row or column, not both
     var currentlyPlaced = 0;
+    var style = "";
     //arrays containing special tile numbers
     var tripleWord = [1,8,15,106,120,211,218,225];
     var doubleWord = [17,29,33,43,49,57,65,71,155,161,169,177,183,193,197,209];
@@ -13,8 +17,8 @@ $( document ).ready(function() {
     var doubleLetter = [4,12,37,39,46,53,60,93,97,99,103,109,117,123,127,129,133,166,173,180,187,189,214,222];
     //Array to check if player hand is occupied or not
     var playerHand = [false,false,false,false,false,false,false];
-    //Array used for keeping track of current tiles in play 999 is a abritarary number used to skip over the 0 slot
-    var tiles = [999];
+    //Array used for keeping track of current tiles in play 
+    var tiles = [];
     //Array used for "bag" of tiles
     var bag = [];
     bag["A"] = { "value" : 1,  "number-remaining" : 9  } ;
@@ -64,7 +68,6 @@ $( document ).ready(function() {
         //Selects random char from tile string at random  
         selected += chars.substr( Math.floor(Math.random() * total), 1);
         bag[selected]["number-remaining"] -= 1;
-        console.log(selected + "'s remaining :" + bag[selected]["number-remaining"]);
         return selected;
     };
     //used inside board creation to detect when to insert special tiles
@@ -119,7 +122,6 @@ $( document ).ready(function() {
                     strbody += "<td class='normal' id='" + cellCount + "' height ='50' width = '50'>" + "<img src='graphics/Scrabble_Tile__.jpg' border='0' height ='50' width = '50'</img></td>";
             }
             }
-            console.log("CELL " + cellCount + "is now droppable");
             cellCount++;
         }
         strbody += "</tr>\n";
@@ -133,7 +135,7 @@ $( document ).ready(function() {
             var selected = randomTile();
             if(playerHand[i] === false){
                 $("#playerTile" + (i +1)).append("<div class='draggable' id ='tile" + tileCount + "'><img src='graphics/Scrabble_Tile_" + selected + ".jpg' alt='test' height ='45' width = '45'></div>");
-                tiles[tileCount] = {"letter":selected, "special": ""};
+                tiles[tileCount] = {"letter":selected, "special": "", "previous":"rack"};
                 tileCount++;
                 playerHand[i] = true;
             }
@@ -143,8 +145,8 @@ $( document ).ready(function() {
     $("button[name='dealTile']").click(function() {
         dealTile();
     });
-    //Calculates scores from special tiles
-    var calcScore = function(id){
+    //Calculate score from individual tiles
+    var calcTile = function(id){
         switch(tiles[id].special){
             case "tripleLetter":
                 return (3*bag[tiles[id].letter].value);
@@ -152,10 +154,40 @@ $( document ).ready(function() {
             case "doubleLetter":
                 return (2*bag[tiles[id].letter].value);
                 break;
-            case "normal":
+            default:
+                console.log(id);
                 return (bag[tiles[id].letter].value);
                 break;
         }
+    };
+    //Calculates scores from word
+    var calcScore = function(){
+        var placeHolder = [];
+        var multiplier = 1;
+        var score = 0;
+        //gather tiles from word and put in placeholder
+        for(var index in tiles){
+            if(tiles[index].previous !== "rack"){
+                placeHolder.push(index);
+                //check for double/triple word multipliers
+                if(tiles[index].special === "doubleWord"){
+                    multiplier = 2;
+                }
+                if(tiles[index].special === "tripleWord"){
+                    multiplier = 3;
+                }
+                if(tiles[index].special === "star"){
+                    multiplier = 2;
+                }
+            }
+         }
+         //calculate score from individual tiles and add them up
+         for(i = 0; i < placeHolder.length;i++){
+             score += calcTile(placeHolder[i]);
+             console.log("score before mult is " + score);
+         }
+         console.log(multiplier * score);
+         return (multiplier * score);
     };
     //initialize board
     createBoard();
@@ -176,44 +208,171 @@ $( document ).ready(function() {
                 left: cntrLeft + "px",
                 top: cntrTop + "px"
             });
-            $("#"+prevTile).droppable('option', 'accept', '.draggable');
-            console.log(prevTile);
+            $(this).droppable('option', 'accept', ui.draggable);
             var id = ui.draggable.attr("id").substr(4,1);
-            console.log(id);
-            curScore -= calcScore(id);
-            $("#score").html(curScore);
+            tiles[id].previous = "rack";
+            if(tiles[id].previous !== "rack"){
+                currentlyPlaced--;
+            }
+            $("#score").html("Score: " + calcScore());
         }});
 };
-    //make board droppable
-    $(".draggable").draggable({revert: "invalid"});
-    for(i = 1; i <= cellCount; i++){
-        $("#" + i).droppable({accept: ".draggable",
-                              drop: function(event, ui) {
-            $(this).append(ui.draggable);
-            //snap draggable to center
-            var width = $(this).width();
-            var height = $(this).height();
-            var cntrLeft = (width / 2 - ui.draggable.width() / 2) + 3;
-            var cntrTop = (height / 2 - ui.draggable.height() / 2) - 23;
+    $(".draggable").draggable({revert: function(obj){
+            //revert tile
+            if(obj === false){
+                //determine error message to be given
+                if(currentlyPlaced === 0){
+                    $("#errormsg").html("The first tile must be placed in the center star");
+                }
+                else{
+                    $("#errormsg").html("Not a valid spot, you must place tiles along either a row or a column");
+                    console.log("Currently Placed:" +currentlyPlaced);
+                }
+                console.log("FALSE CALLED");
+                return true;
+            }
+            //tile success
+            else{
+                //only determine validity if tile moves from rack to board
+                if(tiles[$(this).attr("id").substr(4,1)].previous !== "rack"){
+                    determineValid();
+                }
+                //remove error msg on success
+                $("#errormsg").html("");
+                return false;
+            }
+    }});
+    //ivalidate the validation array to prepare for new cases
+    var wipeValid = function(){
+        for(i = 1; i < validate.length;i++){
+                $("#" + validate[i]).droppable('destroy');
+        }
+        validate = [];
+    };
+    //makes argument valid droppable
+    var makeValid = function(arg){
+        $(arg).droppable({accept: ".draggable",
+                drop: function(event, ui) {
+                    
+                    $(this).append(ui.draggable);
+                     //snap draggable to center
+                    var width = $(this).width();
+                    var height = $(this).height();
+                    var cntrLeft = (width / 2 - ui.draggable.width() / 2) + 3;
+                    var cntrTop = (height / 2 - ui.draggable.height() / 2) - 23;
 
-            ui.draggable.css({
-                left: cntrLeft + "px",
-                top: cntrTop + "px"
-            });
-            $("#"+prevTile).droppable('option', 'accept', '.draggable');
-            currentlyPlaced++;
-            //prevents other tiles from being placed on a slot once occupied
-            $(this).droppable('option', 'accept', ui.draggable);
-            //Score Calculations
-            var id = ui.draggable.attr("id").substr(4,1);
-            //grab class string while ignoring "ui-draggable" that was added onto the class name, and store in global array
-            tiles[id].special = $(this).attr("class").substring(0, $(this).attr("class").indexOf(' '));
-            console.log(tiles[id].special);
-            curScore += calcScore(id);
-            $("#score").html(curScore);
-        },
-            out: function(event, ui){
-                prevTile = $(this).attr("id");
-        }   });
+                    ui.draggable.css({
+                    left: cntrLeft + "px",
+                    top: cntrTop + "px"
+                    });
+                    //prevents other tiles from being placed on a slot once occupied
+                    $(this).droppable('option', 'accept', ui.draggable);
+            
+                    //Score Calculations
+                    var id = ui.draggable.attr("id").substr(4,1);
+                    console.log(tiles[id].previous);
+                    if(tiles[id].previous === "rack"){
+                        currentlyPlaced++;
+                        console.log("Currently Placed:" + currentlyPlaced);
+                    }
+                    //force revert if moving tile from board space to another board space
+
+                    //grab class string while ignoring "ui-draggable" that was added onto the class name, and store in global array
+                    tiles[id].special = $(this).attr("class").substring(0, $(this).attr("class").indexOf(' '));
+                    tiles[id].previous = $(this).attr("id").toString();
+                    console.log("Previous:" + tiles[id].previous + " Current Space:" + $(this).attr("id").toString());
+                    for(i = 1;i < tiles.length;i++){
+                    }
+                    $("#score").html("Score: " + calcScore());
+                    //prevents players from playing tiles in invalid slots such as playing a tile vertical of the middle slot when the second tile was placed horizontally
+                    wipeValid();
+                },
+                out: function(event, ui){
+                    prevTile = $(this).attr("id");
+                }
+            }
+            );
+    };
+    //determine which areas are droppable
+    var determineValid = function(){
+    switch(currentlyPlaced){
+        //first tile must go on star tile
+        case 0: 
+            validate[0] = 113;
+            makeValid("#"+ validate[0]);
+        break;
+        //middle tile has been placed
+        case 1:
+            //four possible spots when only middle tile is placed
+            //vertical slots
+            validate[1] = 98;
+            validate[2] = 128;
+            //horizontal slots
+            validate[3] = 112;
+            validate[4] = 114;
+            for(i = 1; i < 5;i++){
+                makeValid("#"+validate[i]);
+            }
+        break;
+        //determine valid spots after two tiles are placed
+        default:
+            var placeHolder = [];
+            console.log(tiles);
+            //check to see if user is laying tiles horizontally or vertically
+            for(var index in tiles) {
+                if(tiles[index].previous !== "rack"){
+                    placeHolder.push(Number(tiles[index].previous));
+                }
+            }
+            if(Math.abs(placeHolder[1] - placeHolder[0]) === 1){
+                style = "horizontal";
+            }
+            else{
+                style = "vertical";
+            }
+            //if user is laying horizontally, determine valid spots
+            if(style === "horizontal"){
+                var highest = 0;
+                var lowest =999;
+                for(var index in tiles) {
+                    if(tiles[index].previous !== "rack"){
+                        if((Number(tiles[index].previous) - 1) < lowest){
+                            lowest = (Number(tiles[index].previous) -1);
+                        }
+                        if((Number(tiles[index].previous) + 1) > highest){
+                            highest = (Number(tiles[index].previous) +1);
+                        }  
+                }
+                }
+                makeValid("#" + highest);
+                validate.push(highest);
+                makeValid("#" + lowest);
+                validate.push(lowest);
+            }
+            //if user is laying vertically, determine valid spots
+            else{
+                for(var index in tiles) {
+                    var highest = 0;
+                    var lowest =999;
+                    for(var index in tiles) {
+                    if(tiles[index].previous !== "rack"){
+                        if((Number(tiles[index].previous) - 15) < lowest){
+                            lowest = (Number(tiles[index].previous) -15);
+                        }
+                        if((Number(tiles[index].previous) + 15) > highest){
+                            highest = (Number(tiles[index].previous) +15);
+                        }  
+                }
+                }
+                }
+                makeValid("#" + highest);
+                validate.push(highest);
+                makeValid("#" + lowest);
+                validate.push(lowest);
+            }
+            console.log(validate);
+        break;  
     }
+};
+    determineValid();
 });
