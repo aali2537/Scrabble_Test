@@ -4,9 +4,9 @@ $( document ).ready(function() {
     var tileCount = 1;
     var curScore = 0;
     var prevTile = 0;
+    var numWords = 1;
     //array used for making validating tiles easier
     var validate = [];
-    var revalidate = [];
     //var for enforcing players to play their tiles in either a row or column, not both
     var currentlyPlaced = 0;
     var style = "";
@@ -48,7 +48,35 @@ $( document ).ready(function() {
     bag["Y"] = { "value" : 4,  "number-remaining" : 2  } ;
     bag["Z"] = { "value" : 10, "number-remaining" : 1  } ;
     bag["_"] = { "value" : 0,  "number-remaining" : 2  } ;
-    
+
+
+    // The dictionary lookup object
+var dict = {};
+ 
+// Do a jQuery Ajax request for the text dictionary
+$.get( "dictionary.txt", function( txt ) {
+    // Get an array of all the words
+    console.log(txt);
+    var words = txt.split( "\n" );
+
+    // And add them as properties to the dictionary lookup
+    // This will allow for fast lookups later
+    for ( var i = 0; i < words.length; i++ ) {
+        dict[ words[i] ] = true;
+    }
+});
+ 
+// Modified to only pass in one word, which can then be verified.
+function findWord( word ) {
+    // See if it's in the dictionary
+    if ( dict[ word ] ) {
+        // If it is, return that word
+        return "dict success";
+    }
+
+    // Otherwise, it isn't in the dictionary.
+    return "dict failed";
+}
     //"Pull a random tile from bag with proper probability distributions
     var randomTile = function(){
         var total = 0;
@@ -135,15 +163,40 @@ $( document ).ready(function() {
             var selected = randomTile();
             if(playerHand[i] === false){
                 $("#playerTile" + (i +1)).append("<div class='draggable' id ='tile" + tileCount + "'><img src='graphics/Scrabble_Tile_" + selected + ".jpg' alt='test' height ='45' width = '45'></div>");
-                tiles[tileCount] = {"letter":selected, "special": "", "previous":"rack"};
+                tiles[tileCount] = {"letter":selected, "special": "", "previous":"rack", "word":numWords};
                 tileCount++;
                 playerHand[i] = true;
             }
         }
     };
+    var getWord = function(){
+        var placeHolder = [];
+        var string = "";
+        for (var index in tiles){
+            if(tiles[index].word === numWords && tiles[index].previous !== "rack"){
+                //grab all placed tiles during current turn and store in array
+                placeHolder.push(tiles[index].previous);
+            }
+        }
+        //sort in ascending order
+        placeHolder.sort(function(a, b){return a-b;});
+        //construct word and store in string
+        for (var i = 0; i < placeHolder.length; i++){
+            for (var index in tiles){
+                if (tiles[index].previous === placeHolder[i]){
+                    string += tiles[index].letter;
+                }
+            }
+        }
+        console.log(findWord("rate"));
+        console.log(findWord(string.toLowerCase()));
+    };
     //event listner for clicking recieve tiles button
     $("button[name='dealTile']").click(function() {
         dealTile();
+    });
+     $("button[name='submitWord']").click(function() {
+        getWord();
     });
     //Calculate score from individual tiles
     var calcTile = function(id){
@@ -275,8 +328,6 @@ $( document ).ready(function() {
                         currentlyPlaced++;
                         console.log("Currently Placed:" + currentlyPlaced);
                     }
-                    //force revert if moving tile from board space to another board space
-
                     //grab class string while ignoring "ui-draggable" that was added onto the class name, and store in global array
                     tiles[id].special = $(this).attr("class").substring(0, $(this).attr("class").indexOf(' '));
                     tiles[id].previous = $(this).attr("id").toString();
@@ -298,8 +349,10 @@ $( document ).ready(function() {
     switch(currentlyPlaced){
         //first tile must go on star tile
         case 0: 
+            if(numWords === 1){
             validate[0] = 113;
             makeValid("#"+ validate[0]);
+        }
         break;
         //middle tile has been placed
         case 1:
