@@ -71,7 +71,7 @@ function findWord( word ) {
     // See if it's in the dictionary
     if ( dict[ word ] ) {
         // If it is, return that word
-        return "dict success";
+        return true;
     }
 
     // Otherwise, it isn't in the dictionary.
@@ -188,8 +188,9 @@ function findWord( word ) {
                 }
             }
         }
-        console.log(findWord("rate"));
-        console.log(findWord(string.toLowerCase()));
+    if(findWord(string.toLowerCase()) === true){
+        $("#errormsg").html(string.toLowerCase() +" is A word!");
+    }
     };
     //event listner for clicking recieve tiles button
     $("button[name='dealTile']").click(function() {
