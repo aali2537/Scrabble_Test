@@ -71,6 +71,7 @@ function findWord( word ) {
     // See if it's in the dictionary
     if ( dict[ word ] ) {
         // If it is, return that word
+        console.log(word +"is a word");
         return true;
     }
 
@@ -189,7 +190,10 @@ function findWord( word ) {
             }
         }
     if(findWord(string.toLowerCase()) === true){
-        $("#errormsg").html(string.toLowerCase() +" is A word!");
+        $("#success").html(string.toLowerCase() +" is a word!");
+    }
+    else{
+        $("#errormsg").html(string.toLowerCase() +" is not a word!");
     }
     };
     //event listner for clicking recieve tiles button
